@@ -21,7 +21,7 @@
     color: #333;
     font-family: 'Pacifico', cursive;
     margin: 25px 0;
-    font-size: 32px;
+    font-size: 34px;
     text-align: center;
   }
 
@@ -32,7 +32,7 @@
 </head>
 <body>
 
-<h1>Sígueme en Instagram 💛</h1>
+<h1>Sígueme en Instagram perro</h1>
 <canvas id="canvas"></canvas>
 
 <script>
@@ -46,6 +46,8 @@ const img = new Image();
 img.src = "imagen.png";
 
 let puntos = [];
+let tiempo = 0;
+let fase = "polvo"; // polvo -> formar
 
 img.onload = () => {
 
@@ -65,9 +67,6 @@ img.onload = () => {
   const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  const centroX = canvas.width / 2;
-  const centroY = canvas.height / 2;
-
   for (let i = 0; i < canvas.width; i += 5) {
     for (let j = 0; j < canvas.height; j += 5) {
 
@@ -78,35 +77,53 @@ img.onload = () => {
       const b = data.data[index + 2];
       const a = data.data[index + 3];
 
-      // 🔥 FILTRO MEJORADO PARA FONDO COLORIDO
       const brillo = (r + g + b) / 3;
       const esFondo = brillo > 220 || a < 50;
 
       if (!esFondo) {
         puntos.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
           xFinal: i,
           yFinal: j,
-          x: centroX,
-          y: centroY,
           color: `rgb(${r},${g},${b})`,
-          velocidad: Math.random() * 0.05 + 0.02
+          vx: Math.random() * 2 - 1,
+          vy: Math.random() * 2 - 1
         });
       }
     }
   }
 };
 
-// animación mágica desde el centro
+// animación
 function animar() {
   requestAnimationFrame(animar);
 
+  tiempo++;
+
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // ⏳ cambiar fase después de un tiempo
+  if (tiempo > 120) {
+    fase = "formar";
+  }
 
   puntos.forEach(p => {
 
-    // interpolación suave
-    p.x += (p.xFinal - p.x) * p.velocidad;
-    p.y += (p.yFinal - p.y) * p.velocidad;
+    if (fase === "polvo") {
+      // 🌫️ movimiento libre tipo polvo
+      p.x += p.vx;
+      p.y += p.vy;
+
+      // rebote suave en bordes
+      if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+      if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+
+    } else {
+      // ✨ formar imagen (magia)
+      p.x += (p.xFinal - p.x) * 0.05;
+      p.y += (p.yFinal - p.y) * 0.05;
+    }
 
     ctx.fillStyle = p.color;
 
