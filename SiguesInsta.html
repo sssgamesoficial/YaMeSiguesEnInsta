@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sígueme</title>
+
+<style>
+  body {
+    margin: 0;
+    background: black;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  h1 {
+    color: white;
+    font-family: Arial, sans-serif;
+    margin: 20px 0;
+    font-size: 22px;
+  }
+
+  canvas {
+    display: block;
+  }
+</style>
+</head>
+<body>
+
+<h1>Sígueme en Instagram</h1>
+<canvas id="canvas"></canvas>
+
+<script>
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+// 📱 tamaño para celular
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight * 0.85;
+
+const img = new Image();
+img.src = "imagen.png";
+
+let puntos = [];
+let progreso = 0;
+
+img.onload = () => {
+
+  // escalar imagen
+  const scale = Math.min(
+    canvas.width / img.width,
+    canvas.height / img.height
+  );
+
+  const w = img.width * scale;
+  const h = img.height * scale;
+
+  const x = (canvas.width - w) / 2;
+  const y = (canvas.height - h) / 2;
+
+  // dibujar temporalmente
+  ctx.drawImage(img, x, y, w, h);
+
+  const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // 🎯 generar puntos
+  for (let i = 0; i < canvas.width; i += 6) {
+    for (let j = 0; j < canvas.height; j += 6) {
+
+      const index = (j * canvas.width + i) * 4;
+
+      const r = data.data[index];
+      const g = data.data[index + 1];
+      const b = data.data[index + 2];
+      const a = data.data[index + 3];
+
+      // ❌ ignorar fondo (ajusta si tu imagen no es transparente)
+      const esFondo = (r > 200 && g > 200 && b > 200) || a < 50;
+
+      if (!esFondo) {
+        puntos.push({
+          x: i,
+          y: j,
+          color: `rgb(${r},${g},${b})`
+        });
+      }
+    }
+  }
+};
+
+// 🎬 animación
+function animar() {
+  requestAnimationFrame(animar);
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const total = Math.floor(puntos.length * progreso);
+
+  for (let i = 0; i < total; i++) {
+    const p = puntos[i];
+
+    ctx.fillStyle = p.color;
+
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  if (progreso < 1) {
+    progreso += 0.01;
+  }
+}
+
+animar();
+</script>
+
+</body>
+</html>
